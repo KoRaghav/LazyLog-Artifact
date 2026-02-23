@@ -25,7 +25,7 @@ class DurabilityLogERPCCli : public DurabilityLogCli {
     void InitializeConn(const Properties &p, const std::string &svr, void *param) override;
     void Finalize() override;
 
-    bool AppendEntry(const LogEntry &e) override;
+    uint64_t AppendEntry(const LogEntry &e) override;
     bool AppendEntryAsync(const LogEntry &e, std::shared_ptr<RPCToken> &token) override;
     std::tuple<uint64_t, uint64_t, uint16_t> GetNumDurEntry() override;
     uint32_t FetchUnorderedEntries(std::vector<LogEntry> &e, uint32_t max_entries_num) override;

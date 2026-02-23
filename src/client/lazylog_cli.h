@@ -24,12 +24,13 @@ namespace lazylog {
 class LazyLogClient {
    public:
     LazyLogClient();
+    LazyLogClient(std::string id) : id(id) {};
     ~LazyLogClient();
 
     void Initialize(const Properties &p);
     void Finalize();
 
-    std::pair<uint64_t, uint64_t> AppendEntry(const std::string &data);
+    std::vector<uint64_t> AppendEntry(const std::string &data);
     std::pair<uint64_t, uint64_t> AppendEntryQuorum(const std::string &data);
     std::pair<uint64_t, uint64_t> AppendEntryAll(const std::string &data);
     uint64_t OrderEntry(const std::string &data);
@@ -72,7 +73,7 @@ class LazyLogClient {
 #endif
 
     std::string dl_primary_;
-
+    std::string id;
     uint64_t client_id_;
     Sequencer seq_;
     int maj_threshold_;

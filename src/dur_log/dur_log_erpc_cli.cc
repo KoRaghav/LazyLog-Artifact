@@ -52,8 +52,8 @@ void DurabilityLogERPCCli::InitializeConn(const Properties &p, const std::string
     if (!param)
         remote_rpc_id =
             DL_SVR_RPCID_OFFSET + (user_provided_id ? std::stoll(p.GetProperty("dur_log.client_id")) % server_rpc_count
-                                                    : local_rpc_cnt_[server_uri].fetch_add(1) %
-                                                          server_rpc_count);  // corresponding remote rpc id
+                                                 : local_rpc_cnt_[server_uri].fetch_add(1) %
+                                                       server_rpc_count);  // corresponding remote rpc id
     else
         remote_rpc_id = DL_RSV_RPCID;  // corresponding remote rpc id 191
     session_num_ = rpc_->create_session(server_uri, remote_rpc_id);
@@ -87,7 +87,7 @@ void DurabilityLogERPCCli::Finalize() {
     }
 }
 
-bool DurabilityLogERPCCli::AppendEntry(const LogEntry &e) {
+uint64_t DurabilityLogERPCCli::AppendEntry(const LogEntry &e) {
     size_t len = Serializer(e, req_.buf_);
 
     rpc_->resize_msg_buffer(&req_, len);
@@ -95,9 +95,9 @@ bool DurabilityLogERPCCli::AppendEntry(const LogEntry &e) {
 
     pollForRpcComplete();
 
-    if (resp_.get_data_size() < sizeof(uint64_t)) return false;
+    uint64_t received_pri_seq = *reinterpret_cast<uint64_t *>(resp_.buf_);
 
-    return true;
+    return received_pri_seq;
 }
 
 bool DurabilityLogERPCCli::AppendEntryAsync(const LogEntry &e, std::shared_ptr<RPCToken> &token) {
@@ -178,7 +178,7 @@ void DurabilityLogERPCCli::DeleteOrderedEntriesAsync(std::vector<LogEntry::ReqID
 }
 
 uint64_t DurabilityLogERPCCli::ProcessFetchedEntries(const std::vector<LogEntry> &es,
-                                                 std::vector<LogEntry::ReqID> &req_ids) { return 0; }
+                                                     std::vector<LogEntry::ReqID> &req_ids) { return 0; }
 
 bool DurabilityLogERPCCli::IsPrimary() { return is_primary_; }
 

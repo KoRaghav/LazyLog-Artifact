@@ -7,6 +7,7 @@
 #include "../cons_log/cons_log_erpc_cli.h"
 #include "../dur_log/dur_log_erpc_cli.h"
 #include "../rpc/rpc_factory.h"
+#include <mutex>
 
 namespace lazylog {
 
@@ -74,15 +75,28 @@ LazyLogClient::~LazyLogClient() {
     if (!finalized_) Finalize();
 }
 
-std::pair<uint64_t, uint64_t> LazyLogClient::AppendEntry(const std::string &data) {
+std::vector<uint64_t> LazyLogClient::AppendEntry(const std::string &data) {
+    static thread_local std::mt19937 rng(std::random_device{}());
     LogEntry e = constructLogEntry(data);
-    for (auto dc : dur_clis_) {
-        if (!dc.second->AppendEntry(e)) {
-            return std::make_pair(0, e.client_id);  // Todo: server identifier in return
+    std::vector<uint64_t> sequence_nums;
+    std::uniform_int_distribution<int> dist(1, 20);
+
+    std::vector<std::string> dur_servs;
+    for (const auto& pair : dur_clis_) {
+        dur_servs.push_back(pair.first);
+    }
+    std::shuffle(dur_servs.begin(), dur_servs.end(), rng);
+
+    for (std::string dur_srv : dur_servs) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(dist(rng)));
+        uint64_t seq_num = dur_clis_[dur_srv]->AppendEntry(e) / 40;
+        if (dur_clis_[dur_srv]->IsPrimary()) {
+            sequence_nums.insert(sequence_nums.begin(), seq_num);
+        } else {
+            sequence_nums.push_back(seq_num);
         }
     }
-
-    return std::make_pair(e.client_id, e.client_seq);
+    return sequence_nums;
 }
 
 std::pair<uint64_t, uint64_t> LazyLogClient::AppendEntryQuorum(const std::string &data) {
@@ -101,13 +115,13 @@ std::pair<uint64_t, uint64_t> LazyLogClient::AppendEntryQuorum(const std::string
         }
         dc.second->AddPendingReq(token);
     }
-
+    
     do {
         for (auto &dc : dur_clis_) {
             dc.second->CheckPendingReq();
         }
     } while (!quorumCompleted(pri_token, tokens));
-
+    
     return std::make_pair(e.client_id, e.client_seq);
 }
 

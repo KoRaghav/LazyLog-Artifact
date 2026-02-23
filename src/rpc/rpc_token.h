@@ -1,4 +1,5 @@
 #pragma once
+#include <rpc.h>
 
 namespace lazylog {
 
@@ -11,6 +12,8 @@ class RPCToken {
     bool Complete();
     void SetComplete();
     void Reset();
+
+    erpc::MsgBuffer resp_msgbuf;
 
    protected:
     bool completed_;

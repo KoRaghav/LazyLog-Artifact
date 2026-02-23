@@ -8,7 +8,7 @@ namespace lazylog {
 
 class DurabilityLogCli : public ERPCTransport {
    public:
-    virtual bool AppendEntry(const LogEntry &e) = 0;
+    virtual uint64_t AppendEntry(const LogEntry &e) = 0;
     virtual bool AppendEntryAsync(const LogEntry &e, std::shared_ptr<RPCToken> &token) = 0;
     virtual uint64_t OrderEntry(const LogEntry &e) = delete;  // temporarily deprecated, not used for now
     virtual std::tuple<uint64_t, uint64_t, uint16_t> GetNumDurEntry() = 0;
