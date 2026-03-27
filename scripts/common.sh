@@ -1,19 +1,36 @@
-cons_svr="node4"
-dur_svrs=("node1" "node2" "node3")
+# cons_svr="node4"
+# dur_svrs=("node1" "node2" "node3")
 
+# if [ "$scalable_tput" = "true" ]; then 
+#     shard_pri=("node5" "node7" "node9" "node11" "node13" "node15" "node17" "node19" "node21" "node23")
+#     shard_bac=("node6" "node8" "node10" "node12" "node14" "node16" "node18" "node20" "node22" "node24")
+# elif [ "$threeway" = "true" ]; then 
+#     shard_pri=("node5" "node7" "node9" "node11" "node13")
+#     shard_bac=("node6" "node8" "node10" "node12" "node14")
+#     shard_bac1=("node14" "node12" "node8" "node10" "node6")
+# else 
+#     shard_pri=("node5" "node7" "node9" "node11" "node13")
+#     shard_bac=("node6" "node8" "node10" "node12" "node14")
+# fi
+# client_nodes=("node0")
+# Role 1: Client Node
+client_nodes=("n1")
+
+# Role 2: Durable Servers (Metalog Replicas)
+dur_svrs=("n2" "n3" "n4")
+
+# Role 3: Consensus Server (Metalog Leader)
+cons_svr="n5"
+
+# Role 4: Shard Servers (Storage)
+# Mapping n6-n16 (11 nodes total)
 if [ "$scalable_tput" = "true" ]; then 
-    shard_pri=("node5" "node7" "node9" "node11" "node13" "node15" "node17" "node19" "node21" "node23")
-    shard_bac=("node6" "node8" "node10" "node12" "node14" "node16" "node18" "node20" "node22" "node24")
-elif [ "$threeway" = "true" ]; then 
-    shard_pri=("node5" "node7" "node9" "node11" "node13")
-    shard_bac=("node6" "node8" "node10" "node12" "node14")
-    shard_bac1=("node14" "node12" "node8" "node10" "node6")
+    shard_pri=("n6" "n8" "n10" "n12" "n14" "n16")
+    shard_bac=("n7" "n9" "n11" "n13" "n15")
 else 
-    shard_pri=("node5" "node7" "node9" "node11" "node13")
-    shard_bac=("node6" "node8" "node10" "node12" "node14")
+    shard_pri=("n6" "n8" "n10" "n12" "n14")
+    shard_bac=("n7" "n9" "n11" "n13" "n15")
 fi
-client_nodes=("node0")
-
 source $(dirname $0)/usr_cfg.sh
 
 log_dir="$data_dir/logs"
