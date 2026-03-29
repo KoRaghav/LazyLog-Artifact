@@ -12,7 +12,7 @@ target_link_libraries(lazylog_test
     lazylogcli
 )
 
-target_compile_definitions(lazylog_test PRIVATE ERPC_INFINIBAND=true)
+target_compile_definitions(lazylog_test PRIVATE ERPC_RAW=true)
 target_include_directories(lazylog_test PUBLIC ${CMAKE_SOURCE_DIR}/RDMA/release/include)
 
 include(GoogleTest)

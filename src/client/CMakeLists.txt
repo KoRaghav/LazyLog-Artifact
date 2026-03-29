@@ -6,7 +6,7 @@ target_link_libraries(basic_cli
     backendcli
     ibverbs)
 
-target_compile_definitions(lazylogcli PRIVATE ERPC_INFINIBAND=true)
-target_compile_definitions(basic_cli PRIVATE ERPC_INFINIBAND=true)
+target_compile_definitions(lazylogcli PRIVATE ERPC_RAW=true)
+target_compile_definitions(basic_cli PRIVATE ERPC_RAW=true)
 
 add_subdirectory(benchmarking)

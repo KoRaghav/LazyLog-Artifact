@@ -98,9 +98,9 @@ void ERPCConsLogTransport::ReadEntryHandler(erpc::ReqHandle *req_handle, void *c
 void ERPCConsLogTransport::ReadEntriesHandler(erpc::ReqHandle *req_handle, void *context) {}
 
 void ERPCConsLogTransport::GetNumOrderedEntriesHandler(erpc::ReqHandle *req_handle, void *context) {
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    *reinterpret_cast<uint64_t *>(resp.buf_) = cons_log_->GetNumOrderedEntries();
+    *reinterpret_cast<uint64_t *>(resp.buf) = cons_log_->GetNumOrderedEntries();
     rpc_->resize_msg_buffer(&resp, sizeof(uint64_t));
     rpc_->enqueue_response(req_handle, &resp);
 }

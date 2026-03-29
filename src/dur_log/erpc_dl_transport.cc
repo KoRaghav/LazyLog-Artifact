@@ -81,41 +81,41 @@ void ERPCDurLogTransport::server_func(erpc::Nexus *nexus, int th_id, const Prope
 
 void ERPCDurLogTransport::AppendEntryHandler(erpc::ReqHandle *req_handle, void *context) {
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
     LogEntry e;
-    Deserializer(e, req->buf_);
+    Deserializer(e, req->buf);
     e.flags = 0;
     uint64_t pri_seq = dur_log_->AppendEntry(e);
 
     rpc_->resize_msg_buffer(&resp, sizeof(pri_seq));
-    *reinterpret_cast<uint64_t *>(resp.buf_) = pri_seq;
+    *reinterpret_cast<uint64_t *>(resp.buf) = pri_seq;
 
     rpc_->enqueue_response(req_handle, &resp);
 }
 
 void ERPCDurLogTransport::OrderEntryHandler(erpc::ReqHandle *req_handle, void *context) {
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
     LogEntry e;
-    Deserializer(e, req->buf_);
+    Deserializer(e, req->buf);
     e.flags = 0;
     uint64_t seq = dur_log_->AppendEntry(e);
 
     rpc_->resize_msg_buffer(&resp, sizeof(seq));
-    *reinterpret_cast<uint64_t *>(resp.buf_) = seq;
+    *reinterpret_cast<uint64_t *>(resp.buf) = seq;
 
     rpc_->enqueue_response(req_handle, &resp);
 }
 
 void ERPCDurLogTransport::GetNumDurEntryHandler(erpc::ReqHandle *req_handle, void *context) {
     // only on primary
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    *reinterpret_cast<uint64_t *>(resp.buf_) = dur_log_->GetNumDurEntry();
-    *reinterpret_cast<uint64_t *>(resp.buf_ + sizeof(uint64_t)) = dur_log_->GetNumOrderedEntry();
-    *reinterpret_cast<uint16_t *>(resp.buf_ + 2 * sizeof(uint64_t)) = dur_log_->GetView();
+    *reinterpret_cast<uint64_t *>(resp.buf) = dur_log_->GetNumDurEntry();
+    *reinterpret_cast<uint64_t *>(resp.buf + sizeof(uint64_t)) = dur_log_->GetNumOrderedEntry();
+    *reinterpret_cast<uint16_t *>(resp.buf + 2 * sizeof(uint64_t)) = dur_log_->GetView();
 
     rpc_->resize_msg_buffer(&resp, 2 * sizeof(uint64_t) + sizeof(uint16_t));
     rpc_->enqueue_response(req_handle, &resp);
@@ -123,17 +123,17 @@ void ERPCDurLogTransport::GetNumDurEntryHandler(erpc::ReqHandle *req_handle, voi
 
 void ERPCDurLogTransport::SpecReadHandler(erpc::ReqHandle *req_handle, void *context) {
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    const uint64_t idx = *reinterpret_cast<uint64_t*>(req->buf_);
+    const uint64_t idx = *reinterpret_cast<uint64_t*>(req->buf);
 
     LogEntry e;
     int ret_v;
     if ((ret_v = dur_log_->SpecReadEntry(idx, e)) <= 0) {
         rpc_->resize_msg_buffer(&resp, sizeof(int));
-        *reinterpret_cast<int*>(resp.buf_) = ret_v;
+        *reinterpret_cast<int*>(resp.buf) = ret_v;
     } else {
-        rpc_->resize_msg_buffer(&resp, Serializer(e, resp.buf_));
+        rpc_->resize_msg_buffer(&resp, Serializer(e, resp.buf));
     }
 
     rpc_->enqueue_response(req_handle, &resp);
@@ -143,9 +143,9 @@ void ERPCDurLogTransport::SpecReadHandler(erpc::ReqHandle *req_handle, void *con
 void ERPCDurLogTransport::GetGSNHandler(erpc::ReqHandle *req_handle, void *context) {
     // only on primary
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    *reinterpret_cast<uint64_t *>(resp.buf_) = dur_log_->GetGSN();
+    *reinterpret_cast<uint64_t *>(resp.buf) = dur_log_->GetGSN();
 
     rpc_->resize_msg_buffer(&resp, sizeof(uint64_t));
     rpc_->enqueue_response(req_handle, &resp);
@@ -154,10 +154,10 @@ void ERPCDurLogTransport::GetGSNHandler(erpc::ReqHandle *req_handle, void *conte
 void ERPCDurLogTransport::GetGSNBatchHandler(erpc::ReqHandle *req_handle, void *context) {
     // only on primary
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
-    const uint64_t batchSize = *reinterpret_cast<uint64_t *>(req->buf_);
+    auto &resp = req_handle->pre_resp_msgbuf;
+    const uint64_t batchSize = *reinterpret_cast<uint64_t *>(req->buf);
 
-    *reinterpret_cast<uint64_t *>(resp.buf_) = dur_log_->GetGSN(batchSize);
+    *reinterpret_cast<uint64_t *>(resp.buf) = dur_log_->GetGSN(batchSize);
 
     rpc_->resize_msg_buffer(&resp, sizeof(uint64_t));
     rpc_->enqueue_response(req_handle, &resp);
@@ -182,14 +182,14 @@ void ERPCDurLogTransport::cl_server_func(const Properties *p) {
 void ERPCDurLogTransport::FetchUnorderedEntriesHandler(erpc::ReqHandle *req_handle, void *context) {
     // todo: only on primary
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->dyn_resp_msgbuf_;
+    auto &resp = req_handle->dyn_resp_msgbuf;
 
     std::vector<LogEntry> unordered_entries;
-    uint32_t max_entries_num = *reinterpret_cast<uint32_t*>(req->buf_);
+    uint32_t max_entries_num = *reinterpret_cast<uint32_t*>(req->buf);
     uint32_t num = dur_log_->FetchUnorderedEntries(unordered_entries, max_entries_num);
 
     resp = rpc_->alloc_msg_buffer(num * 2048);  // TODO: need a way to determine buf size
-    size_t total_entries_size = MultiSerializer(unordered_entries, resp.buf_);
+    size_t total_entries_size = MultiSerializer(unordered_entries, resp.buf);
     rpc_->resize_msg_buffer(&resp, total_entries_size);
 
     rpc_->enqueue_response(req_handle, &resp);
@@ -197,13 +197,13 @@ void ERPCDurLogTransport::FetchUnorderedEntriesHandler(erpc::ReqHandle *req_hand
 
 void ERPCDurLogTransport::DeleteOrderedEntriesHandler(erpc::ReqHandle *req_handle, void *context) {
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
     std::vector<LogEntry::ReqID> req_ids;
-    ReqIdDeserializer(req_ids, req->buf_);
+    ReqIdDeserializer(req_ids, req->buf);
 
     uint64_t n_del = dur_log_->DelOrderedEntries(req_ids);
-    *reinterpret_cast<uint64_t *>(resp.buf_) = n_del;
+    *reinterpret_cast<uint64_t *>(resp.buf) = n_del;
     rpc_->resize_msg_buffer(&resp, sizeof(uint64_t));
 
     rpc_->enqueue_response(req_handle, &resp);

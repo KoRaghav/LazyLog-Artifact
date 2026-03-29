@@ -44,8 +44,8 @@ target_link_libraries(basic_be_read
     hdr_histogram
     backendcli) 
 
-target_compile_definitions(backendcli PRIVATE ERPC_INFINIBAND=true)
-target_compile_definitions(shardsvr PRIVATE ERPC_INFINIBAND=true)
-target_compile_definitions(shardsvr_wo_opt PRIVATE ERPC_INFINIBAND=true)
-target_compile_definitions(basic_be PRIVATE ERPC_INFINIBAND=true)
-target_compile_definitions(basic_be_read PRIVATE ERPC_INFINIBAND=true)
+target_compile_definitions(backendcli PRIVATE ERPC_RAW=true)
+target_compile_definitions(shardsvr PRIVATE ERPC_RAW=true)
+target_compile_definitions(shardsvr_wo_opt PRIVATE ERPC_RAW=true)
+target_compile_definitions(basic_be PRIVATE ERPC_RAW=true)
+target_compile_definitions(basic_be_read PRIVATE ERPC_RAW=true)

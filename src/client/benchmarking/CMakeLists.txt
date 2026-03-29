@@ -20,7 +20,7 @@ target_link_libraries(append_bench
     backendcli
     ibverbs)
 
-target_compile_definitions(read_bench PRIVATE ERPC_INFINIBAND=true)
-target_compile_definitions(mixed_bench PRIVATE ERPC_INFINIBAND=true)
-target_compile_definitions(append_bench PRIVATE ERPC_INFINIBAND=true)
+target_compile_definitions(read_bench PRIVATE ERPC_RAW=true)
+target_compile_definitions(mixed_bench PRIVATE ERPC_RAW=true)
+target_compile_definitions(append_bench PRIVATE ERPC_RAW=true)
 

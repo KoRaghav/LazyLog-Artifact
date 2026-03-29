@@ -16,11 +16,11 @@ target_link_libraries(dursvr
     numa
     glog::glog
     lazylogcli)
-target_compile_definitions(dursvr PRIVATE ERPC_INFINIBAND=true)
+target_compile_definitions(dursvr PRIVATE ERPC_RAW=true)
 target_include_directories(dursvr PUBLIC ${CMAKE_SOURCE_DIR}/RDMA/release/include)
 
 target_link_libraries(basic_flat_cli
     infinity
     lazylogcli)
-target_compile_definitions(basic_flat_cli PRIVATE ERPC_INFINIBAND=true)
+target_compile_definitions(basic_flat_cli PRIVATE ERPC_RAW=true)
 target_include_directories(basic_flat_cli PUBLIC ${CMAKE_SOURCE_DIR}/RDMA/release/include)

@@ -1,3 +1,6 @@
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "shard_server_wo_opt.h"
 
 #include <unistd.h>
@@ -128,24 +131,24 @@ void ShardServerUnoptimized::read_server_func(const Properties &p, int th_id) {
 
 void ShardServerUnoptimized::AppendBatchHandler(erpc::ReqHandle *req_handle, void *_context) {
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    auto num = *reinterpret_cast<uint32_t *>(req->buf_);
+    auto num = *reinterpret_cast<uint32_t *>(req->buf);
     LogEntry first_e_in_batch;
-    Deserializer(first_e_in_batch, req->buf_ + sizeof(uint32_t));
+    Deserializer(first_e_in_batch, req->buf + sizeof(uint32_t));
     uint64_t big_stripe_unit_size = stripe_unit_size_ * shard_num_;
     uint64_t base_idx = first_e_in_batch.log_idx / big_stripe_unit_size * big_stripe_unit_size;
 
     std::vector<RPCToken> tokens;
     for (auto &b : backups_) {
         tokens.emplace_back();
-        b.second->ReplicateBatchAsync(req->buf_, req->get_data_size(), tokens.back());
+        b.second->ReplicateBatchAsync(req->buf, req->get_data_size(), tokens.back());
         RunERPCOnce();
     }
 
     {
         std::unique_lock<std::shared_mutex> write_lock(cache_rw_lock_);
-        processEntriesAndBuildMap(base_idx, req->buf_);
+        processEntriesAndBuildMap(base_idx, req->buf);
         if (num_entries_[base_idx] >= stripe_unit_size_) writeFromCacheToDisk(base_idx);
     }
 
@@ -160,25 +163,25 @@ void ShardServerUnoptimized::AppendBatchHandler(erpc::ReqHandle *req_handle, voi
     cache_write_cv_.notify_all();
 
     rpc_->resize_msg_buffer(&resp, sizeof(int));
-    *reinterpret_cast<int *>(resp.buf_) = 0;
+    *reinterpret_cast<int *>(resp.buf) = 0;
     rpc_->enqueue_response(req_handle, &resp);
 }
 
 void ShardServerUnoptimized::ReplicateBatchHandler(erpc::ReqHandle *req_handle, void *context) {
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    auto num = *reinterpret_cast<uint32_t *>(req->buf_);
+    auto num = *reinterpret_cast<uint32_t *>(req->buf);
     LogEntry first_e_in_batch;
-    Deserializer(first_e_in_batch, req->buf_ + sizeof(uint32_t));
+    Deserializer(first_e_in_batch, req->buf + sizeof(uint32_t));
     uint64_t big_stripe_unit_size = stripe_unit_size_ * shard_num_;
     uint64_t base_idx = first_e_in_batch.log_idx / big_stripe_unit_size * big_stripe_unit_size;
 
-    processEntriesAndBuildMap(base_idx, req->buf_);
+    processEntriesAndBuildMap(base_idx, req->buf);
 
-    *reinterpret_cast<Status *>(resp.buf_) = Status::OK;
+    *reinterpret_cast<Status *>(resp.buf) = Status::OK;
     if (num_entries_[base_idx] >= stripe_unit_size_) {
-        if (writeFromCacheToDisk(base_idx) < 0) *reinterpret_cast<Status *>(resp.buf_) = Status::ERROR;
+        if (writeFromCacheToDisk(base_idx) < 0) *reinterpret_cast<Status *>(resp.buf) = Status::ERROR;
     }
 
     rpc_->resize_msg_buffer(&resp, sizeof(Status));
@@ -189,7 +192,7 @@ void ShardServerUnoptimized::ReadEntryHandler(erpc::ReqHandle *req_handle, void 
     auto *req = req_handle->get_req_msgbuf();
     auto &resp = static_cast<ServerContext *>(context)->resp_buf_;
 
-    auto idx = *reinterpret_cast<uint64_t *>(req->buf_);
+    auto idx = *reinterpret_cast<uint64_t *>(req->buf);
     uint64_t big_stripe_unit_size = stripe_unit_size_ * shard_num_;
     uint64_t base_idx = idx / big_stripe_unit_size * big_stripe_unit_size;
     uint64_t local_cache_idx = (idx - base_idx) / shard_num_;
@@ -238,7 +241,7 @@ void ShardServerUnoptimized::ReadEntryHandler(erpc::ReqHandle *req_handle, void 
             // if you find next entry, length is difference, else subtract from total size
             len = offset_map.find(idx + shard_num_) != offset_map.end() ? offset_map[idx + shard_num_] - offset_map[idx]
                                                                         : cache_size_[base_idx] - offset_map[idx];
-            int got = readEntryFromDisk(base_idx, offset_map[idx], resp.buf_, len);
+            int got = readEntryFromDisk(base_idx, offset_map[idx], resp.buf, len);
             if (len != got) {
                 LOG(ERROR) << "not able to read length, expected " << len << ", got " << got;
                 if (got == -1) {

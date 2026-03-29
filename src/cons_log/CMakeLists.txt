@@ -12,7 +12,7 @@ target_link_libraries(conssvr
     glog::glog
     lazylogcli
     backendcli)
-target_compile_definitions(conssvr PRIVATE ERPC_INFINIBAND=true)
+target_compile_definitions(conssvr PRIVATE ERPC_RAW=true)
 target_include_directories(conssvr PUBLIC ${CMAKE_SOURCE_DIR}/RDMA/release/include)
 
 add_subdirectory(storage)

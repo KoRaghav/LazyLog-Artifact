@@ -17,7 +17,7 @@ void ConsensusLogERPCCli::InitializeConn(const Properties &p, const std::string 
         std::lock_guard<std::mutex> lock(init_lk_);
         if (!nexus_) {
             const std::string client_uri = p.GetProperty(PROP_CL_CLI_URI, PROP_CL_CLI_URI_DEFAULT);
-            nexus_ = new erpc::Nexus(client_uri);
+            nexus_ = new erpc::Nexus(client_uri, 0, 0);
         } else {
             del_nexus_on_finalize_ = false;  // nexus is not created here
         }

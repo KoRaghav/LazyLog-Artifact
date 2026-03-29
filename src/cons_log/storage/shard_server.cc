@@ -1,3 +1,6 @@
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "shard_server.h"
 
 #include "../../rpc/common.h"
@@ -167,11 +170,11 @@ void ShardServer::read_server_func(const Properties &p, int th_id) {
 
 void ShardServer::AppendBatchHandler(erpc::ReqHandle *req_handle, void *_context) {
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    auto num = *reinterpret_cast<uint32_t *>(req->buf_);
+    auto num = *reinterpret_cast<uint32_t *>(req->buf);
     LogEntry first_e_in_batch;
-    Deserializer(first_e_in_batch, req->buf_ + sizeof(uint32_t));
+    Deserializer(first_e_in_batch, req->buf + sizeof(uint32_t));
     uint64_t big_stripe_unit_size = stripe_unit_size_ * shard_num_;
     uint64_t base_idx = first_e_in_batch.log_idx / big_stripe_unit_size * big_stripe_unit_size;
 
@@ -179,13 +182,13 @@ void ShardServer::AppendBatchHandler(erpc::ReqHandle *req_handle, void *_context
     tokens.reserve(backups_.size());
     for (auto &b : backups_) {
         tokens.emplace_back();
-        b.second->ReplicateBatchAsync(req->buf_, req->get_data_size(), tokens.back());
+        b.second->ReplicateBatchAsync(req->buf, req->get_data_size(), tokens.back());
         RunERPCOnce();
     }
 
     {
         std::unique_lock<std::shared_mutex> write_lock(cache_rw_lock_);
-        addToEntryCache(base_idx, req->buf_);
+        addToEntryCache(base_idx, req->buf);
         if (entries_cache_set_[base_idx].size() >= stripe_unit_size_) writeFromCacheToDisk(base_idx);
     }
 
@@ -201,44 +204,44 @@ void ShardServer::AppendBatchHandler(erpc::ReqHandle *req_handle, void *_context
     cache_write_cv_.notify_all();
 
     rpc_->resize_msg_buffer(&resp, sizeof(int));
-    *reinterpret_cast<int *>(resp.buf_) = 0;
+    *reinterpret_cast<int *>(resp.buf) = 0;
     rpc_->enqueue_response(req_handle, &resp);
 }
 
 #ifdef CORFU
 void ShardServer::AppendEntryHandler(erpc::ReqHandle *req_handle, void *_context) {
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
     LogEntry e;
-    Deserializer(e, req->buf_);
+    Deserializer(e, req->buf);
     uint64_t big_stripe_unit_size = stripe_unit_size_ * shard_num_;
     uint64_t base_idx = e.log_idx / big_stripe_unit_size * big_stripe_unit_size;
 
-    addToEntryCacheAsync(base_idx, req->buf_);
+    addToEntryCacheAsync(base_idx, req->buf);
     if (cache_size_atomic_[base_idx].load() >= stripe_unit_size_) writeFromCacheToDisk(base_idx);
 
     rpc_->resize_msg_buffer(&resp, sizeof(int));
-    *reinterpret_cast<int *>(resp.buf_) = 0;
+    *reinterpret_cast<int *>(resp.buf) = 0;
     rpc_->enqueue_response(req_handle, &resp);
 }
 #endif
 
 void ShardServer::ReplicateBatchHandler(erpc::ReqHandle *req_handle, void *context) {
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    auto num = *reinterpret_cast<uint32_t *>(req->buf_);
+    auto num = *reinterpret_cast<uint32_t *>(req->buf);
     LogEntry first_e_in_batch;
-    Deserializer(first_e_in_batch, req->buf_ + sizeof(uint32_t));
+    Deserializer(first_e_in_batch, req->buf + sizeof(uint32_t));
     uint64_t big_stripe_unit_size = stripe_unit_size_ * shard_num_;
     uint64_t base_idx = first_e_in_batch.log_idx / big_stripe_unit_size * big_stripe_unit_size;
 
-    addToEntryCache(base_idx, req->buf_);
+    addToEntryCache(base_idx, req->buf);
 
-    *reinterpret_cast<Status *>(resp.buf_) = Status::OK;
+    *reinterpret_cast<Status *>(resp.buf) = Status::OK;
     if (entries_cache_set_[base_idx].size() >= stripe_unit_size_) {
-        if (writeFromCacheToDisk(base_idx) < 0) *reinterpret_cast<Status *>(resp.buf_) = Status::ERROR;
+        if (writeFromCacheToDisk(base_idx) < 0) *reinterpret_cast<Status *>(resp.buf) = Status::ERROR;
     }
 
     rpc_->resize_msg_buffer(&resp, sizeof(Status));
@@ -248,10 +251,10 @@ void ShardServer::ReplicateBatchHandler(erpc::ReqHandle *req_handle, void *conte
 void ShardServer::ReadEntryHandler(erpc::ReqHandle *req_handle, void *context) {
 #ifdef CORFU
     const auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    auto idx = *reinterpret_cast<uint64_t *>(req->buf_);
-    bool wait = *reinterpret_cast<uint64_t *>(req->buf_ + sizeof(uint64_t));
+    auto idx = *reinterpret_cast<uint64_t *>(req->buf);
+    bool wait = *reinterpret_cast<uint64_t *>(req->buf + sizeof(uint64_t));
     uint64_t big_stripe_unit_size = stripe_unit_size_ * shard_num_;
     uint64_t base_idx = idx / big_stripe_unit_size * big_stripe_unit_size;
     uint64_t local_cache_idx = (idx - base_idx) / shard_num_;
@@ -267,13 +270,13 @@ void ShardServer::ReadEntryHandler(erpc::ReqHandle *req_handle, void *context) {
 
             fd = open(getDataFilePath(base_idx).c_str(), O_RDONLY);
             if (fd < 0) {
-                *reinterpret_cast<Status *>(resp.buf_) = Status::NOENT;
+                *reinterpret_cast<Status *>(resp.buf) = Status::NOENT;
                 rpc_->resize_msg_buffer(&resp, sizeof(Status));
                 rpc_->enqueue_response(req_handle, &resp);
                 return;
             }
 
-            if (pread(fd, resp.buf_, entry_size_, entry_size_ * local_cache_idx) != entry_size_) {
+            if (pread(fd, resp.buf, entry_size_, entry_size_ * local_cache_idx) != entry_size_) {
                 LOG(WARNING) << "Reading less bytes than expected";
             }
 
@@ -281,7 +284,7 @@ void ShardServer::ReadEntryHandler(erpc::ReqHandle *req_handle, void *context) {
         } else {
             // entry might be in an unfinished file
             fd = entries_fd_set_[base_idx];
-            if (pread(fd, resp.buf_, entry_size_, entry_size_ * local_cache_idx) != entry_size_) {
+            if (pread(fd, resp.buf, entry_size_, entry_size_ * local_cache_idx) != entry_size_) {
                 LOG(WARNING) << "Reading less bytes than expected";
             }
             read_lock.unlock();
@@ -289,9 +292,9 @@ void ShardServer::ReadEntryHandler(erpc::ReqHandle *req_handle, void *context) {
     }
 
     LogEntry e;
-    len = Deserializer(e, resp.buf_);
+    len = Deserializer(e, resp.buf);
     if (e.flags != 1) {
-        *reinterpret_cast<Status *>(resp.buf_) = Status::NOENT;
+        *reinterpret_cast<Status *>(resp.buf) = Status::NOENT;
         rpc_->resize_msg_buffer(&resp, sizeof(Status));
         rpc_->enqueue_response(req_handle, &resp);
         return;
@@ -302,9 +305,9 @@ void ShardServer::ReadEntryHandler(erpc::ReqHandle *req_handle, void *context) {
     rpc_->enqueue_response(req_handle, &resp);
 #else
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    auto idx = *reinterpret_cast<uint64_t *>(req->buf_);
+    auto idx = *reinterpret_cast<uint64_t *>(req->buf);
     uint64_t big_stripe_unit_size = stripe_unit_size_ * shard_num_;
     uint64_t base_idx = idx / big_stripe_unit_size * big_stripe_unit_size;
     uint64_t local_cache_idx = (idx - base_idx) / shard_num_;
@@ -351,7 +354,7 @@ void ShardServer::ReadEntryHandler(erpc::ReqHandle *req_handle, void *context) {
             }
 
             // safe to read
-            len = Serializer(entries_cache_set_[base_idx][local_cache_idx], resp.buf_);
+            len = Serializer(entries_cache_set_[base_idx][local_cache_idx], resp.buf);
             break;
         }
     }
@@ -395,11 +398,11 @@ size_t ShardServer::collectBatchEntries(const uint64_t start_idx, const uint64_t
 
 void ShardServer::ReadBatchHandler(erpc::ReqHandle *req_handle, void *context) {
     const auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
     // wait for the last index to complete
-    auto start_idx = *reinterpret_cast<uint64_t *>(req->buf_);
-    auto end_idx = *reinterpret_cast<uint64_t *>(req->buf_ + sizeof(uint64_t));
+    auto start_idx = *reinterpret_cast<uint64_t *>(req->buf);
+    auto end_idx = *reinterpret_cast<uint64_t *>(req->buf + sizeof(uint64_t));
     uint64_t big_stripe_unit_size = stripe_unit_size_ * shard_num_;
     uint64_t base_idx = end_idx / big_stripe_unit_size * big_stripe_unit_size;
     uint64_t local_cache_idx = (end_idx - base_idx) / shard_num_;
@@ -444,7 +447,7 @@ void ShardServer::ReadBatchHandler(erpc::ReqHandle *req_handle, void *context) {
                 continue;
             }
 
-            len = collectBatchEntries(start_idx, end_idx, resp.buf_);
+            len = collectBatchEntries(start_idx, end_idx, resp.buf);
             break;
         }
     }
@@ -461,9 +464,9 @@ void ShardServer::ReadBatchHandler(erpc::ReqHandle *req_handle, void *context) {
 
 void ShardServer::UpdateGlobalIdxHandler(erpc::ReqHandle *req_handle, void *context) {
     auto *req = req_handle->get_req_msgbuf();
-    auto &resp = req_handle->pre_resp_msgbuf_;
+    auto &resp = req_handle->pre_resp_msgbuf;
 
-    uint64_t global_idx = *reinterpret_cast<uint64_t *>(req->buf_);
+    uint64_t global_idx = *reinterpret_cast<uint64_t *>(req->buf);
 
     {
         std::unique_lock<std::shared_mutex> lock(cache_rw_lock_);
@@ -472,7 +475,7 @@ void ShardServer::UpdateGlobalIdxHandler(erpc::ReqHandle *req_handle, void *cont
     // wake up all threads that are waiting for a cache write to update metadata
     cache_write_cv_.notify_all();
 
-    *reinterpret_cast<int *>(resp.buf_) = 0;
+    *reinterpret_cast<int *>(resp.buf) = 0;
     rpc_->resize_msg_buffer(&resp, sizeof(int));
     rpc_->enqueue_response(req_handle, &resp);
 }

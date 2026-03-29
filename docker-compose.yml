@@ -1,0 +1,345 @@
+version: '3'
+services:
+  node0:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node0
+    hostname: node0
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.10
+    cap_add:
+      - NET_ADMIN
+  node1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node1
+    hostname: node1
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.11
+    cap_add:
+      - NET_ADMIN
+  node2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node2
+    hostname: node2
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.12
+    cap_add:
+      - NET_ADMIN
+  node3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node3
+    hostname: node3
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.13
+    cap_add:
+      - NET_ADMIN
+  node4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node4
+    hostname: node4
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.14
+    cap_add:
+      - NET_ADMIN
+  node5:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node5
+    hostname: node5
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.15
+    cap_add:
+      - NET_ADMIN
+  node6:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node6
+    hostname: node6
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.16
+    cap_add:
+      - NET_ADMIN
+  node7:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node7
+    hostname: node7
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.17
+    cap_add:
+      - NET_ADMIN
+  node8:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node8
+    hostname: node8
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.18
+    cap_add:
+      - NET_ADMIN
+  node9:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node9
+    hostname: node9
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.19
+    cap_add:
+      - NET_ADMIN
+  node10:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node10
+    hostname: node10
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.20
+    cap_add:
+      - NET_ADMIN
+  node11:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node11
+    hostname: node11
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.21
+    cap_add:
+      - NET_ADMIN
+  node12:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node12
+    hostname: node12
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.22
+    cap_add:
+      - NET_ADMIN
+  node13:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node13
+    hostname: node13
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.23
+    cap_add:
+      - NET_ADMIN
+  node14:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node14
+    hostname: node14
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.24
+    cap_add:
+      - NET_ADMIN
+  node15:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: lazylog-node15
+    hostname: node15
+    networks:
+      lazylog-net:
+        ipv4_address: 10.10.2.25
+    cap_add:
+      - NET_ADMIN
+
+networks:
+  lazylog-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.2.0/24

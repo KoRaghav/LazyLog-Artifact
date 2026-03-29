@@ -8,4 +8,4 @@ target_link_libraries(kvsvr
     backendcli
     absl::flat_hash_map)
 
-target_compile_definitions(kvsvr PRIVATE ERPC_INFINIBAND=true)
+target_compile_definitions(kvsvr PRIVATE ERPC_RAW=true)

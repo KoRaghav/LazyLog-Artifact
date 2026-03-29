@@ -55,7 +55,7 @@ void ShardClient::InitializeConn(const Properties& p, const std::string& svr_uri
         std::lock_guard<std::mutex> lock(init_lk_);
         if (!nexus_) {
             const std::string cli_uri = p.GetProperty(PROP_SHD_CLI_URI, PROP_SHD_CLI_URI_DEFAULT);
-            nexus_ = new erpc::Nexus(cli_uri);
+            nexus_ = new erpc::Nexus(cli_uri, 0, 0);
             LOG(INFO) << "Nexus bind to " << cli_uri;
         } else {
             del_nexus_on_finalize_ = false;
@@ -104,7 +104,7 @@ void ShardClient::Finalize() {
 }
 
 void ShardClient::AppendBatchAsync(const std::vector<LogEntry>& es, uint64_t from, uint32_t num, RPCToken& token) {
-    size_t len = MultiSerializer(es, from, num, req_.buf_);
+    size_t len = MultiSerializer(es, from, num, req_.buf);
 
     rpc_->resize_msg_buffer(&req_, len);
     rpc_->enqueue_request(session_num_, APPEND_BATCH, &req_, &resp_, shd_rpc_cont_func_async, &token);
@@ -113,7 +113,7 @@ void ShardClient::AppendBatchAsync(const std::vector<LogEntry>& es, uint64_t fro
 uint64_t ShardClient::AppendBatchAsync(const std::vector<LogEntry>& es, uint64_t from, uint64_t to, uint32_t itrv,
                                        RPCToken& token) {
     uint64_t actual_end = to;
-    size_t len = MultiSerializer(es, from, actual_end, itrv, req_.buf_);
+    size_t len = MultiSerializer(es, from, actual_end, itrv, req_.buf);
 
     rpc_->resize_msg_buffer(&req_, len);
     rpc_->enqueue_request(session_num_, APPEND_BATCH, &req_, &resp_, shd_rpc_cont_func_async, &token);
@@ -121,7 +121,7 @@ uint64_t ShardClient::AppendBatchAsync(const std::vector<LogEntry>& es, uint64_t
 }
 
 void ShardClient::UpdateGlobalIdxAsync(const uint64_t idx, RPCToken& tkn) {
-    *reinterpret_cast<uint64_t*>(req_.buf_) = idx;
+    *reinterpret_cast<uint64_t*>(req_.buf) = idx;
     rpc_->resize_msg_buffer(&req_, sizeof(uint64_t));
 
     rpc_->enqueue_request(session_num_, UPDATE_GLBL_IDX, &req_, &resp_, shd_rpc_cont_func_async, &tkn);
@@ -129,7 +129,7 @@ void ShardClient::UpdateGlobalIdxAsync(const uint64_t idx, RPCToken& tkn) {
 
 #ifdef CORFU
 bool ShardClient::AppendEntry(const LogEntry& e) {
-    size_t len = Serializer(e, req_.buf_);
+    size_t len = Serializer(e, req_.buf);
     rpc_->resize_msg_buffer(&req_, len);
 
     RPCToken tkn;
@@ -147,7 +147,7 @@ bool ShardClient::AppendEntry(const LogEntry& e) {
 #endif
 
 bool ShardClient::ReadEntry(const uint64_t idx, LogEntry& e) {
-    *reinterpret_cast<uint64_t*>(req_.buf_) = idx;
+    *reinterpret_cast<uint64_t*>(req_.buf) = idx;
     rpc_->resize_msg_buffer(&req_, sizeof(uint64_t));
 
     RPCToken tkn;
@@ -160,13 +160,13 @@ bool ShardClient::ReadEntry(const uint64_t idx, LogEntry& e) {
     if (resp_.get_data_size() <= sizeof(Status)) {
         return false;
     } else {
-        Deserializer(e, resp_.buf_);
+        Deserializer(e, resp_.buf);
         return true;
     }
 }
 
 void ShardClient::ReplicateBatchAsync(const uint8_t* buf, size_t size, RPCToken& token) {
-    memcpy(req_.buf_, buf, size);
+    memcpy(req_.buf, buf, size);
 
     rpc_->resize_msg_buffer(&req_, size);
     rpc_->enqueue_request(session_num_, REP_BATCH, &req_, &resp_, shd_rpc_cont_func_async, &token);

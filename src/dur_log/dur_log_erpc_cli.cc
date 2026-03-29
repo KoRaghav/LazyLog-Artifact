@@ -23,7 +23,7 @@ void DurabilityLogERPCCli::InitializeConn(const Properties &p, const std::string
         std::lock_guard<std::mutex> lock(init_lk_);
         if (!nexus_) {
             const std::string client_uri = p.GetProperty(PROP_DL_CLI_URI, PROP_DL_CLI_URI_DEFAULT);
-            nexus_ = new erpc::Nexus(client_uri);
+            nexus_ = new erpc::Nexus(client_uri, 0, 0);
             LOG(INFO) << "Nexus bind to " << client_uri;
         } else {
             del_nexus_on_finalize_ = false;  // nexus is not created here
@@ -88,20 +88,20 @@ void DurabilityLogERPCCli::Finalize() {
 }
 
 uint64_t DurabilityLogERPCCli::AppendEntry(const LogEntry &e) {
-    size_t len = Serializer(e, req_.buf_);
+    size_t len = Serializer(e, req_.buf);
 
     rpc_->resize_msg_buffer(&req_, len);
     rpc_->enqueue_request(session_num_, APPEND_ENTRY, &req_, &resp_, rpc_cont_func, this);
 
     pollForRpcComplete();
 
-    uint64_t received_pri_seq = *reinterpret_cast<uint64_t *>(resp_.buf_);
+    uint64_t received_pri_seq = *reinterpret_cast<uint64_t *>(resp_.buf);
 
     return received_pri_seq;
 }
 
 bool DurabilityLogERPCCli::AppendEntryAsync(const LogEntry &e, std::shared_ptr<RPCToken> &token) {
-    size_t len = Serializer(e, req_.buf_);
+    size_t len = Serializer(e, req_.buf);
 
     rpc_->resize_msg_buffer(&req_, len);
     rpc_->enqueue_request(session_num_, APPEND_ENTRY, &req_, &resp_, rpc_cont_func_async, token.get());
@@ -112,21 +112,21 @@ bool DurabilityLogERPCCli::AppendEntryAsync(const LogEntry &e, std::shared_ptr<R
 std::tuple<uint64_t, uint64_t, uint16_t> DurabilityLogERPCCli::GetNumDurEntry() {
     if (!IsPrimary()) LOG(WARNING) << "Not getting tail from a primary DL server";
 
-    *reinterpret_cast<int *>(req_.buf_) = 0;
+    *reinterpret_cast<int *>(req_.buf) = 0;
     rpc_->resize_msg_buffer(&req_, sizeof(int));
 
     rpc_->enqueue_request(session_num_, GET_N_DUR_ENTRY, &req_, &resp_, rpc_cont_func, this);
 
     pollForRpcComplete();
 
-    uint64_t n_dur = *reinterpret_cast<uint64_t *>(resp_.buf_);
-    uint64_t n_ordered = *reinterpret_cast<uint64_t *>(resp_.buf_ + sizeof(uint64_t));
-    uint16_t view = *reinterpret_cast<uint16_t *>(resp_.buf_ + 2 * sizeof(uint64_t));
+    uint64_t n_dur = *reinterpret_cast<uint64_t *>(resp_.buf);
+    uint64_t n_ordered = *reinterpret_cast<uint64_t *>(resp_.buf + sizeof(uint64_t));
+    uint16_t view = *reinterpret_cast<uint16_t *>(resp_.buf + 2 * sizeof(uint64_t));
     return {n_dur, n_ordered, view};
 }
 
 uint32_t DurabilityLogERPCCli::FetchUnorderedEntries(std::vector<LogEntry> &e, uint32_t max_entries_num) {
-    *reinterpret_cast<uint32_t *>(req_.buf_) = max_entries_num;
+    *reinterpret_cast<uint32_t *>(req_.buf) = max_entries_num;
     rpc_->resize_msg_buffer(&req_, sizeof(max_entries_num));
 
     rpc_->enqueue_request(session_num_, FETCH_UNORDERED_ENTRIES, &req_, &resp_, rpc_cont_func,
@@ -134,7 +134,7 @@ uint32_t DurabilityLogERPCCli::FetchUnorderedEntries(std::vector<LogEntry> &e, u
 
     pollForRpcComplete();
 
-    return MultiDeserializer(e, resp_.buf_);
+    return MultiDeserializer(e, resp_.buf);
 }
 
 uint32_t DurabilityLogERPCCli::FetchUnorderedEntries(std::vector<LogEntry> &e, uint64_t _from,
@@ -143,7 +143,7 @@ uint32_t DurabilityLogERPCCli::FetchUnorderedEntries(std::vector<LogEntry> &e, u
 }
 
 uint64_t DurabilityLogERPCCli::DeleteOrderedEntries(std::vector<LogEntry::ReqID> &req_ids) {
-    size_t len = ReqIdSerializer(req_ids, req_.buf_);
+    size_t len = ReqIdSerializer(req_ids, req_.buf);
 
     rpc_->resize_msg_buffer(&req_, len);
     rpc_->enqueue_request(session_num_, DEL_ORDERED_ENTRIES, &req_, &resp_, rpc_cont_func, this);
@@ -152,26 +152,26 @@ uint64_t DurabilityLogERPCCli::DeleteOrderedEntries(std::vector<LogEntry::ReqID>
 
     if (resp_.get_data_size() < sizeof(uint64_t)) return 0;
 
-    return *reinterpret_cast<uint64_t *>(resp_.buf_);
+    return *reinterpret_cast<uint64_t *>(resp_.buf);
 }
 
 int DurabilityLogERPCCli::SpecRead(const uint64_t idx, LogEntry &e) {
     rpc_->resize_msg_buffer(&req_, sizeof(uint64_t));
 
-    *reinterpret_cast<uint64_t*>(req_.buf_) = idx;
+    *reinterpret_cast<uint64_t*>(req_.buf) = idx;
 
     rpc_->enqueue_request(session_num_, SPEC_READ, &req_, &resp_, rpc_cont_func, this);
 
     pollForRpcComplete();
 
-    if (resp_.get_data_size() < MetaDataSize()) return *reinterpret_cast<int*>(resp_.buf_);
+    if (resp_.get_data_size() < MetaDataSize()) return *reinterpret_cast<int*>(resp_.buf);
 
-    return Deserializer(e, resp_.buf_);
+    return Deserializer(e, resp_.buf);
 }
 
 void DurabilityLogERPCCli::DeleteOrderedEntriesAsync(std::vector<LogEntry::ReqID> &req_ids) {
     rpc_tkn_.Reset();
-    size_t len = ReqIdSerializer(req_ids, req_.buf_);
+    size_t len = ReqIdSerializer(req_ids, req_.buf);
 
     rpc_->resize_msg_buffer(&req_, len);  // todo: may need a larger req buffer
     rpc_->enqueue_request(session_num_, DEL_ORDERED_ENTRIES, &req_, &resp_, rpc_cont_func_async, &rpc_tkn_);
@@ -210,7 +210,7 @@ void DurabilityLogERPCCli::notifyRpcComplete() { complete_ = true; }
 
 #ifdef CORFU
 uint64_t DurabilityLogERPCCli::getGSN() {
-    // size_t len = Serializer(e, req_.buf_);
+    // size_t len = Serializer(e, req_.buf);
 
     rpc_->resize_msg_buffer(&req_, 0);
     rpc_->enqueue_request(session_num_, GET_GSN, &req_, &resp_, rpc_cont_func, this);
@@ -218,13 +218,13 @@ uint64_t DurabilityLogERPCCli::getGSN() {
     pollForRpcComplete();
     if (resp_.get_data_size() < sizeof(uint64_t)) return UINT64_MAX;
 
-    return *reinterpret_cast<uint64_t *>(resp_.buf_);
+    return *reinterpret_cast<uint64_t *>(resp_.buf);
 }
 
 uint64_t DurabilityLogERPCCli::getGSNBatch(uint64_t batchSize) {
     rpc_->resize_msg_buffer(&req_, sizeof(uint64_t));
 
-    *reinterpret_cast<uint64_t *>(req_.buf_) = batchSize;
+    *reinterpret_cast<uint64_t *>(req_.buf) = batchSize;
 
     rpc_->enqueue_request(session_num_, GET_GSN_BATCH, &req_, &resp_, rpc_cont_func, this);
 
@@ -232,7 +232,7 @@ uint64_t DurabilityLogERPCCli::getGSNBatch(uint64_t batchSize) {
 
     if (resp_.get_data_size() < sizeof(uint64_t)) return UINT64_MAX;
 
-    return *reinterpret_cast<uint64_t *>(resp_.buf_);
+    return *reinterpret_cast<uint64_t *>(resp_.buf);
 }
 #endif
 

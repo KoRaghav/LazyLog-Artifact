@@ -13,7 +13,7 @@ target_link_libraries(lazylogcli
 
 option(CORFU "Enable CORFU" OFF)
 
-target_compile_definitions(lazylogcli PRIVATE ERPC_INFINIBAND=true)
+target_compile_definitions(lazylogcli PRIVATE ERPC_RAW=true)
 target_include_directories(lazylogcli PRIVATE ${CMAKE_SOURCE_DIR}/RDMA/release/include)
 if(CORFU)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCORFU")

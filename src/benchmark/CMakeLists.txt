@@ -47,4 +47,4 @@ target_link_libraries(benchmark
   PRIVATE backendcli
 )
 
-target_compile_definitions(benchmark PRIVATE ERPC_INFINIBAND=true)
+target_compile_definitions(benchmark PRIVATE ERPC_RAW=true)
